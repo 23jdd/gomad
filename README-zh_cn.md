@@ -280,7 +280,7 @@ go test -run '^$' -bench Benchmark -benchmem ./option ./result
 | Option 集合 | `Collect`、`All`、`Any`、`Match` |
 | Result 构造 | `Ok`、`Err`、`From` |
 | Result 状态 | `IsOk`、`IsErr`、`Get`、`Unwrap`、`UnwrapErr`、`Expect`、`ExpectErr`、`UnwrapOr`、`UnwrapOrElse` |
-| Result 组合 | `Map`、`MapErr`、`AndThen`、`OrElse`、`Inspect`、`InspectErr`、`Ok`、`Err`、`Iter` |
+| Result 组合 | `Map`、`MapErr`、`AndThen`、`OrElse`、`Inspect`、`InspectErr`、`Ok`、`Err`、`Iter`,`Must` |
 | Result 错误 | `Error`、`IntoError`、`Wrap`，以及标准 `errors.Is`、`errors.As` |
 | Result 集合 | `Collect`、`All`、`Partition`、`Match` |
 | Iterator | `Empty`、`Once`、`FromSlice`、`Map`、`Filter`、`Collect`、`Len` |

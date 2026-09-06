@@ -275,7 +275,7 @@ them locally before drawing performance conclusions.
 | Option composition | `Map`, `AndThen`, `OrElse`, `Filter`, `Inspect`, `Flatten`, `OkOr`, `OkOrElse`, `Iter` |
 | Option collections | `Collect`, `All`, `Any`, `Match` |
 | Result constructors | `Ok`, `Err`, `From` |
-| Result state | `IsOk`, `IsErr`, `Get`, `Unwrap`, `UnwrapErr`, `Expect`, `ExpectErr`, `UnwrapOr`, `UnwrapOrElse` |
+| Result state | `IsOk`, `IsErr`, `Get`, `Unwrap`, `UnwrapErr`, `Expect`, `ExpectErr`, `UnwrapOr`, `UnwrapOrElse`,`Must`|
 | Result composition | `Map`, `MapErr`, `AndThen`, `OrElse`, `Inspect`, `InspectErr`, `Ok`, `Err`, `Iter` |
 | Result errors | `Error`, `IntoError`, `Wrap` (with standard `errors.Is` and `errors.As`) |
 | Result collections | `Collect`, `All`, `Partition`, `Match` |
