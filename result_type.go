@@ -173,6 +173,30 @@ func (result Result[T, E]) Wrap(message string) Result[T, error] {
 	return Err[T](fmt.Errorf("%s: %w", message, result.IntoError()))
 }
 
+// ExpectMust Must+自定义错误內容
+func (result Result[T, E]) ExpectMust[U any, F error](f func(T) (U, F), message string) Result[U, F] {
+	if result.IsErr() {
+		panic(message)
+	}
+	value, err := f(result.value)
+	if err != nil {
+		return Ok[U, F](value)
+	}
+	return Err[U, F](err)
+}
+
+// Must 将一个 Result转化为另一个Result 相当于Map时如果Error直接panic
+func (result Result[T, E]) Must[U any, F error](f func(T) (U, F)) Result[U, F] {
+	if result.IsErr() {
+		panic(result.err)
+	}
+	value, err := f(result.value)
+	if err != nil {
+		return Ok[U, F](value)
+	}
+	return Err[U, F](err)
+}
+
 // MarshalJSON 将 Result 编码为 {"ok": value} 或 {"err": err}。
 func (result Result[T, E]) MarshalJSON() ([]byte, error) {
 	key := "ok"
