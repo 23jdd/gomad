@@ -1,4 +1,4 @@
-package core
+package gomad
 
 import (
 	"bytes"
@@ -13,20 +13,29 @@ import (
 	"github.com/23jdd/gomad/iterator"
 )
 
-// Option contains either one value (Some) or no value (None).
-// The fields are private so invalid states cannot be constructed.
+// Option 表示一个可能存在的值：Some 包含值，None 不包含值。
+// Option 的零值等价于 None。
 type Option[T any] struct {
 	value T
 	some  bool
 }
 
+// Some 创建一个包含 value 的 Option。
 func Some[T any](value T) Option[T] { return Option[T]{value: value, some: true} }
-func None[T any]() Option[T]        { return Option[T]{} }
 
-func (opt Option[T]) IsSome() bool   { return opt.some }
-func (opt Option[T]) IsNone() bool   { return !opt.some }
+// None 创建一个不包含值的 Option。
+func None[T any]() Option[T] { return Option[T]{} }
+
+// IsSome 判断 Option 是否包含值。
+func (opt Option[T]) IsSome() bool { return opt.some }
+
+// IsNone 判断 Option 是否不包含值。
+func (opt Option[T]) IsNone() bool { return !opt.some }
+
+// Get 返回内部值以及表示值是否存在的布尔值。
 func (opt Option[T]) Get() (T, bool) { return opt.value, opt.some }
 
+// Unwrap 返回 Some 中的值；对 None 调用时会触发 panic。
 func (opt Option[T]) Unwrap() T {
 	if !opt.some {
 		panic("called Option.Unwrap on None")
@@ -34,10 +43,11 @@ func (opt Option[T]) Unwrap() T {
 	return opt.value
 }
 
-// Unwarp is kept for source compatibility with gomad's initial release.
-// Deprecated: use Unwrap.
+// Unwarp 为早期版本的拼写错误保留源码兼容性。
+// Deprecated: 请使用 Unwrap。
 func (opt Option[T]) Unwarp() T { return opt.Unwrap() }
 
+// Expect 返回 Some 中的值；对 None 调用时使用 message 触发 panic。
 func (opt Option[T]) Expect(message string) T {
 	if !opt.some {
 		panic(message)
@@ -45,6 +55,7 @@ func (opt Option[T]) Expect(message string) T {
 	return opt.value
 }
 
+// UnwrapOr 返回 Some 中的值，None 则返回 fallback。
 func (opt Option[T]) UnwrapOr(fallback T) T {
 	if opt.some {
 		return opt.value
@@ -52,6 +63,7 @@ func (opt Option[T]) UnwrapOr(fallback T) T {
 	return fallback
 }
 
+// UnwrapOrElse 返回 Some 中的值，None 则调用 fallback 生成默认值。
 func (opt Option[T]) UnwrapOrElse(fallback func() T) T {
 	if opt.some {
 		return opt.value
@@ -59,7 +71,7 @@ func (opt Option[T]) UnwrapOrElse(fallback func() T) T {
 	return fallback()
 }
 
-// Map transforms a value and may change its type.
+// Map 转换 Some 中的值，并允许改变值类型；None 会直接传播。
 func (opt Option[T]) Map[U any](transform func(T) U) Option[U] {
 	if !opt.some {
 		return None[U]()
@@ -67,7 +79,7 @@ func (opt Option[T]) Map[U any](transform func(T) U) Option[U] {
 	return Some(transform(opt.value))
 }
 
-// AndThen chains an Option-producing operation and may change its type.
+// AndThen 串联另一个返回 Option 的操作，并允许改变值类型。
 func (opt Option[T]) AndThen[U any](transform func(T) Option[U]) Option[U] {
 	if !opt.some {
 		return None[U]()
@@ -75,6 +87,7 @@ func (opt Option[T]) AndThen[U any](transform func(T) Option[U]) Option[U] {
 	return transform(opt.value)
 }
 
+// OrElse 为 None 延迟生成另一个 Option，Some 保持不变。
 func (opt Option[T]) OrElse(fallback func() Option[T]) Option[T] {
 	if opt.some {
 		return opt
@@ -82,6 +95,7 @@ func (opt Option[T]) OrElse(fallback func() Option[T]) Option[T] {
 	return fallback()
 }
 
+// Filter 仅在谓词接受 Some 中的值时保留该值。
 func (opt Option[T]) Filter(predicate func(T) bool) Option[T] {
 	if opt.some && !predicate(opt.value) {
 		return None[T]()
@@ -89,6 +103,7 @@ func (opt Option[T]) Filter(predicate func(T) bool) Option[T] {
 	return opt
 }
 
+// Inspect 在 Some 分支执行只读回调，并返回原 Option。
 func (opt Option[T]) Inspect(inspect func(T)) Option[T] {
 	if opt.some {
 		inspect(opt.value)
@@ -96,7 +111,7 @@ func (opt Option[T]) Inspect(inspect func(T)) Option[T] {
 	return opt
 }
 
-// OkOr converts Some to Ok and None to Err.
+// OkOr 将 Some 转为 Ok，将 None 转为包含 err 的 Err。
 func (opt Option[T]) OkOr[E any](err E) Result[T, E] {
 	if opt.some {
 		return Ok[T, E](opt.value)
@@ -104,7 +119,7 @@ func (opt Option[T]) OkOr[E any](err E) Result[T, E] {
 	return Err[T](err)
 }
 
-// OkOrElse lazily converts Some to Ok and None to Err.
+// OkOrElse 将 Some 转为 Ok，None 则调用 fallback 生成 Err。
 func (opt Option[T]) OkOrElse[E any](fallback func() E) Result[T, E] {
 	if opt.some {
 		return Ok[T, E](opt.value)
@@ -112,8 +127,8 @@ func (opt Option[T]) OkOrElse[E any](fallback func() E) Result[T, E] {
 	return Err[T](fallback())
 }
 
-// Flatten removes one nesting level when T itself is an Option. Prefer the
-// statically constrained option.Flatten function in generic code.
+// Flatten 去掉一层 Option 嵌套。
+// 泛型代码中建议优先使用 option.Flatten，以获得更严格的类型约束。
 func (opt Option[T]) Flatten() T {
 	if opt.some {
 		return opt.value
@@ -122,6 +137,7 @@ func (opt Option[T]) Flatten() T {
 	return zero
 }
 
+// Iter 将 Some 转为单元素迭代器，将 None 转为空迭代器。
 func (opt Option[T]) Iter() iterator.Iterator[T] {
 	if !opt.some {
 		return iterator.Empty[T]()
@@ -129,6 +145,7 @@ func (opt Option[T]) Iter() iterator.Iterator[T] {
 	return iterator.Once(opt.value)
 }
 
+// MarshalJSON 将 Some 编码为内部值，将 None 编码为 null。
 func (opt Option[T]) MarshalJSON() ([]byte, error) {
 	if !opt.some {
 		return []byte("null"), nil
@@ -136,6 +153,7 @@ func (opt Option[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(opt.value)
 }
 
+// UnmarshalJSON 将 null 解码为 None，其他 JSON 值解码为 Some。
 func (opt *Option[T]) UnmarshalJSON(data []byte) error {
 	if opt == nil {
 		return errors.New("option.Option: UnmarshalJSON on nil pointer")
@@ -152,7 +170,7 @@ func (opt *Option[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Scan implements sql.Scanner. SQL NULL becomes None.
+// Scan 实现 sql.Scanner；SQL NULL 会转换为 None。
 func (opt *Option[T]) Scan(source any) error {
 	if opt == nil {
 		return errors.New("option.Option: Scan on nil pointer")
@@ -193,7 +211,7 @@ func (opt *Option[T]) Scan(source any) error {
 	return nil
 }
 
-// Value implements driver.Valuer. None becomes SQL NULL.
+// Value 实现 driver.Valuer；None 会转换为 SQL NULL。
 func (opt Option[T]) Value() (driver.Value, error) {
 	if !opt.some {
 		return nil, nil

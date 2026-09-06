@@ -1,23 +1,23 @@
-// Package iterator supplies the small value iterator used by Option and Result.
+// Package iterator 提供 Option 与 Result 使用的小型值迭代器。
 package iterator
 
-// Iterator is an immutable, reusable iterator over a finite sequence.
+// Iterator 表示一个不可变、可重复使用的有限序列迭代器。
 type Iterator[T any] struct {
 	values []T
 }
 
-// Empty returns an iterator with no items.
+// Empty 创建一个空迭代器。
 func Empty[T any]() Iterator[T] { return Iterator[T]{} }
 
-// Once returns an iterator containing one item.
+// Once 创建一个只包含 value 的迭代器。
 func Once[T any](value T) Iterator[T] { return Iterator[T]{values: []T{value}} }
 
-// FromSlice returns an iterator over a defensive copy of values.
+// FromSlice 基于 values 的副本创建迭代器。
 func FromSlice[T any](values []T) Iterator[T] {
 	return Iterator[T]{values: append([]T(nil), values...)}
 }
 
-// Map transforms every item and may change its type.
+// Map 转换每个元素，并允许改变元素类型。
 func (iter Iterator[T]) Map[U any](transform func(T) U) Iterator[U] {
 	values := make([]U, len(iter.values))
 	for index, value := range iter.values {
@@ -26,7 +26,7 @@ func (iter Iterator[T]) Map[U any](transform func(T) U) Iterator[U] {
 	return Iterator[U]{values: values}
 }
 
-// Map transforms every item and may change its type.
+// Map 转换每个元素，并允许改变元素类型。
 func Map[T, U any](iter Iterator[T], transform func(T) U) Iterator[U] {
 	values := make([]U, len(iter.values))
 	for index, value := range iter.values {
@@ -35,7 +35,7 @@ func Map[T, U any](iter Iterator[T], transform func(T) U) Iterator[U] {
 	return Iterator[U]{values: values}
 }
 
-// Filter keeps items accepted by predicate.
+// Filter 仅保留 predicate 接受的元素。
 func (iter Iterator[T]) Filter(predicate func(T) bool) Iterator[T] {
 	values := make([]T, 0, len(iter.values))
 	for _, value := range iter.values {
@@ -46,10 +46,10 @@ func (iter Iterator[T]) Filter(predicate func(T) bool) Iterator[T] {
 	return Iterator[T]{values: values}
 }
 
-// Collect returns a defensive copy of the sequence.
+// Collect 返回序列的副本。
 func (iter Iterator[T]) Collect() []T {
 	return append([]T(nil), iter.values...)
 }
 
-// Len returns the number of items in the iterator.
+// Len 返回迭代器中的元素数量。
 func (iter Iterator[T]) Len() int { return len(iter.values) }

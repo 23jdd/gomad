@@ -1,22 +1,21 @@
-// Package option provides a zero-allocation Option type.
+// Package option 提供零分配的 Option 类型及其常用辅助函数。
 package option
 
 import (
-	"github.com/23jdd/gomad/internal/core"
+	"github.com/23jdd/gomad"
 	"github.com/23jdd/gomad/iterator"
 )
 
-// Option contains either one value (Some) or no value (None).
-// Its zero value is None.
-type Option[T any] = core.Option[T]
+// Option 表示一个可能存在的值；其零值为 None。
+type Option[T any] = gomad.Option[T]
 
-// Some constructs an Option containing value.
-func Some[T any](value T) Option[T] { return core.Some(value) }
+// Some 创建一个包含 value 的 Option。
+func Some[T any](value T) Option[T] { return gomad.Some(value) }
 
-// None constructs an empty Option.
-func None[T any]() Option[T] { return core.None[T]() }
+// None 创建一个不包含值的 Option。
+func None[T any]() Option[T] { return gomad.None[T]() }
 
-// Map transforms an Option and may change its value type.
+// Map 转换 Option 中的值，并允许改变值类型。
 func Map[T, U any](value Option[T], transform func(T) U) Option[U] {
 	if value.IsNone() {
 		return None[U]()
@@ -24,7 +23,7 @@ func Map[T, U any](value Option[T], transform func(T) U) Option[U] {
 	return Some(transform(value.Unwrap()))
 }
 
-// AndThen chains an Option-producing operation and may change its value type.
+// AndThen 串联另一个返回 Option 的操作，并允许改变值类型。
 func AndThen[T, U any](value Option[T], transform func(T) Option[U]) Option[U] {
 	if value.IsNone() {
 		return None[U]()
@@ -32,23 +31,23 @@ func AndThen[T, U any](value Option[T], transform func(T) Option[U]) Option[U] {
 	return transform(value.Unwrap())
 }
 
-// OkOr converts Some to Ok and None to Err, allowing any error value type.
-func OkOr[T, E any](value Option[T], err E) core.Result[T, E] {
+// OkOr 将 Some 转为 Ok，将 None 转为包含 err 的 Err。
+func OkOr[T, E any](value Option[T], err E) gomad.Result[T, E] {
 	if value.IsSome() {
-		return core.Ok[T, E](value.Unwrap())
+		return gomad.Ok[T, E](value.Unwrap())
 	}
-	return core.Err[T](err)
+	return gomad.Err[T](err)
 }
 
-// OkOrElse lazily converts Some to Ok and None to Err.
-func OkOrElse[T, E any](value Option[T], fallback func() E) core.Result[T, E] {
+// OkOrElse 将 Some 转为 Ok，None 则调用 fallback 生成 Err。
+func OkOrElse[T, E any](value Option[T], fallback func() E) gomad.Result[T, E] {
 	if value.IsSome() {
-		return core.Ok[T, E](value.Unwrap())
+		return gomad.Ok[T, E](value.Unwrap())
 	}
-	return core.Err[T](fallback())
+	return gomad.Err[T](fallback())
 }
 
-// FromPtr converts a pointer to an Option. A nil pointer becomes None.
+// FromPtr 将指针转换为 Option；nil 指针会变为 None。
 func FromPtr[T any](value *T) Option[T] {
 	if value == nil {
 		return None[T]()
@@ -56,7 +55,7 @@ func FromPtr[T any](value *T) Option[T] {
 	return Some(*value)
 }
 
-// FromZero converts the zero value of T to None and every other value to Some.
+// FromZero 将 T 的零值转换为 None，其他值转换为 Some。
 func FromZero[T comparable](value T) Option[T] {
 	var zero T
 	if value == zero {
@@ -65,7 +64,7 @@ func FromZero[T comparable](value T) Option[T] {
 	return Some(value)
 }
 
-// FromValueOk converts Go's conventional (value, ok) pair to an Option.
+// FromValueOk 将 Go 常见的 (value, ok) 组合转换为 Option。
 func FromValueOk[T any](value T, ok bool) Option[T] {
 	if !ok {
 		return None[T]()
@@ -73,7 +72,7 @@ func FromValueOk[T any](value T, ok bool) Option[T] {
 	return Some(value)
 }
 
-// FromValueError converts a (value, error) pair to an Option.
+// FromValueError 将 (value, error) 组合转换为 Option。
 func FromValueError[T any](value T, err error) Option[T] {
 	if err != nil {
 		return None[T]()
@@ -81,7 +80,7 @@ func FromValueError[T any](value T, err error) Option[T] {
 	return Some(value)
 }
 
-// Flatten removes one level of Option nesting.
+// Flatten 去掉一层 Option 嵌套。
 func Flatten[T any](value Option[Option[T]]) Option[T] {
 	if value.IsNone() {
 		return None[T]()
@@ -89,7 +88,7 @@ func Flatten[T any](value Option[Option[T]]) Option[T] {
 	return value.Unwrap()
 }
 
-// Match dispatches to some or none according to value's state.
+// Match 根据状态调用 some 或 none 分支。
 func Match[T any](value Option[T], some func(T), none func()) {
 	if value.IsSome() {
 		some(value.Unwrap())
@@ -98,7 +97,7 @@ func Match[T any](value Option[T], some func(T), none func()) {
 	none()
 }
 
-// Collect returns all contained values, or None when any input is None.
+// Collect 收集全部 Some 值；任何一个 None 都会使结果为 None。
 func Collect[T any](values []Option[T]) Option[[]T] {
 	collected := make([]T, 0, len(values))
 	for _, value := range values {
@@ -110,7 +109,7 @@ func Collect[T any](values []Option[T]) Option[[]T] {
 	return Some(collected)
 }
 
-// All reports whether every Option is Some. It is true for an empty slice.
+// All 判断所有 Option 是否都是 Some；空切片返回 true。
 func All[T any](values []Option[T]) bool {
 	for _, value := range values {
 		if value.IsNone() {
@@ -120,7 +119,7 @@ func All[T any](values []Option[T]) bool {
 	return true
 }
 
-// Any reports whether at least one Option is Some.
+// Any 判断是否至少存在一个 Some。
 func Any[T any](values []Option[T]) bool {
 	for _, value := range values {
 		if value.IsSome() {
@@ -130,7 +129,7 @@ func Any[T any](values []Option[T]) bool {
 	return false
 }
 
-// FromIterator collects zero or one item from an iterator into an Option.
+// FromIterator 将迭代器中的第一个元素转换为 Some，空迭代器转换为 None。
 func FromIterator[T any](iter iterator.Iterator[T]) Option[T] {
 	values := iter.Collect()
 	if len(values) == 0 {
