@@ -1,6 +1,14 @@
 # gomad
 
-[English](README.md)
+[![Go Reference](https://pkg.go.dev/badge/github.com/23jdd/gomad.svg)](https://pkg.go.dev/github.com/23jdd/gomad)
+[![Go 1.27+](https://img.shields.io/badge/Go-1.27%2B-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![可运行示例](https://img.shields.io/badge/examples-runnable-2563eb)](option/example_test.go)
+
+> 为现代 Go 打造的 Rust 风格 Option 与 Result 开发体验。
+
+[30 秒上手](#30-秒上手) · [为什么选择](#为什么使用-gomad) ·
+[API 参考](#api-参考) · [完整示例](examples/main.go) · [English](README.md)
 
 `gomad` 是一个面向 Go 1.27+ 的轻量级 Option 与 Result 库，围绕泛型方法和
 零开销值类型构建。
@@ -9,11 +17,45 @@
 使用习惯：类型是普通结构体、零值合法，并且支持 `(value, ok)`、
 `(value, error)`、JSON、`database/sql` 以及标准 `errors` 包。
 
+如果你正在寻找类型安全的空值处理、可组合的 Go 错误处理，或者希望在不背离
+Go 习惯的前提下使用 Rust 风格函数式类型，`gomad` 正是为这个交集而设计。
+
+## 核心亮点
+
+| | 你将获得 |
+| --- | --- |
+| **原生支持 Go 1.27** | 支持 `Option[int].Map(...) -> Option[string]` 这样的跨类型泛型方法链 |
+| **贴合 Go 生态** | 支持指针、map 查询、`(T, error)`、`errors.Is/As`、JSON 与 SQL |
+| **行为可预测** | 零值合法、没有隐藏的全局状态，也不强制产生堆分配 |
+| **依赖面极小** | 只使用 Go 标准库，不需要运行时框架或代码生成 |
+| **示例即可测试** | Option、Result 与 Iterator 的每个公开 API 都有可执行示例 |
+
+## 30 秒上手
+
+```go
+name := option.Some(1).
+	AndThen(findUser).
+	Map(func(user User) string { return user.Name }).
+	Filter(func(name string) bool { return name != "" })
+
+config := result.From(os.ReadFile("config.json")).
+	Map(parseConfig).
+	AndThen(validateConfig).
+	Inspect(func(Config) { log.Println("配置加载成功") }).
+	InspectErr(func(err error) { log.Println("配置加载失败：", err) })
+```
+
+两条链从头到尾都保留静态类型。None 与 Err 会自动跳过成功回调，让正常路径保持
+简洁，同时不隐藏失败处理。
+
 ## 为什么使用 gomad
 
 指针经常同时承担“值不存在”、共享可变状态和对象标识等不同职责；`(T, error)`
 则可能在保存或传递过程中被意外拆散。`Option[T]` 与 `Result[T, E]` 把状态和
 数据放在同一个值中，让每个分支都清晰可见，并能通过 Go 1.27 泛型方法连续组合。
+
+gomad 适合解析器、配置加载器、API 客户端、数据库边界、校验流水线，以及任何
+需要明确区分“值不存在”“计算失败”和“普通值”的领域模型。
 
 ## 安装
 
@@ -242,3 +284,17 @@ go test -run '^$' -bench Benchmark -benchmem ./option ./result
 | Result 错误 | `Error`、`IntoError`、`Wrap`，以及标准 `errors.Is`、`errors.As` |
 | Result 集合 | `Collect`、`All`、`Partition`、`Match` |
 | Iterator | `Empty`、`Once`、`FromSlice`、`Map`、`Filter`、`Collect`、`Len` |
+
+## 支持与参与贡献
+
+如果 gomad 让你的 Go 代码变得更清晰，欢迎
+[为项目点一个 Star](https://github.com/23jdd/gomad)。Star 能帮助更多 Go 开发者
+发现这个项目。
+
+- 运行[完整示例](examples/main.go)，或者浏览可执行的
+  [Option](option/example_test.go)、[Result](result/example_test.go) 和
+  [Iterator](iterator/example_test.go) 示例。
+- 遇到缺陷、有 API 建议或真实业务集成需求时，欢迎
+  [提交 Issue](https://github.com/23jdd/gomad/issues)。
+- 欢迎提交包含针对性测试和示例的 Pull Request。
+- 如果你的团队也在探索显式可选值或可组合错误处理，欢迎分享 gomad。
