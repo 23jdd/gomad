@@ -59,20 +59,18 @@ func (opt Option[T]) UnwrapOrElse(fallback func() T) T {
 	return fallback()
 }
 
-// Map transforms a value without changing its type. Use option.Map when the
-// output type differs; Go methods cannot declare additional type parameters.
-func (opt Option[T]) Map(transform func(T) T) Option[T] {
+// Map transforms a value and may change its type.
+func (opt Option[T]) Map[U any](transform func(T) U) Option[U] {
 	if !opt.some {
-		return None[T]()
+		return None[U]()
 	}
 	return Some(transform(opt.value))
 }
 
-// AndThen chains an Option operation with the same value type. Use
-// option.AndThen when the output type differs.
-func (opt Option[T]) AndThen(transform func(T) Option[T]) Option[T] {
+// AndThen chains an Option-producing operation and may change its type.
+func (opt Option[T]) AndThen[U any](transform func(T) Option[U]) Option[U] {
 	if !opt.some {
-		return None[T]()
+		return None[U]()
 	}
 	return transform(opt.value)
 }
@@ -99,17 +97,17 @@ func (opt Option[T]) Inspect(inspect func(T)) Option[T] {
 }
 
 // OkOr converts Some to Ok and None to Err.
-func (opt Option[T]) OkOr(err error) Result[T, error] {
+func (opt Option[T]) OkOr[E any](err E) Result[T, E] {
 	if opt.some {
-		return Ok[T, error](opt.value)
+		return Ok[T, E](opt.value)
 	}
 	return Err[T](err)
 }
 
 // OkOrElse lazily converts Some to Ok and None to Err.
-func (opt Option[T]) OkOrElse(fallback func() error) Result[T, error] {
+func (opt Option[T]) OkOrElse[E any](fallback func() E) Result[T, E] {
 	if opt.some {
-		return Ok[T, error](opt.value)
+		return Ok[T, E](opt.value)
 	}
 	return Err[T](fallback())
 }

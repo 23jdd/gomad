@@ -46,7 +46,7 @@ func TestResultChaining(t *testing.T) {
 		t.Fatalf("chain = %v, inspected = %d", value, inspected)
 	}
 
-	mapped := result.Map(value, strconv.Itoa)
+	mapped := value.Map(strconv.Itoa)
 	if mapped.Unwrap() != "21" {
 		t.Fatalf("cross-type Map = %q", mapped.Unwrap())
 	}

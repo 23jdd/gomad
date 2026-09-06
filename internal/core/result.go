@@ -69,38 +69,34 @@ func (result Result[T, E]) UnwrapOrElse(fallback func(E) T) T {
 	return fallback(result.err)
 }
 
-// Map transforms an Ok value without changing its type. Use result.Map when
-// the output type differs.
-func (result Result[T, E]) Map(transform func(T) T) Result[T, E] {
+// Map transforms an Ok value and may change its type.
+func (result Result[T, E]) Map[U any](transform func(T) U) Result[U, E] {
 	if !result.ok {
-		return result
+		return Err[U](result.err)
 	}
-	return Ok[T, E](transform(result.value))
+	return Ok[U, E](transform(result.value))
 }
 
-// MapErr transforms an Err value without changing its type. Use result.MapErr
-// when the output type differs.
-func (result Result[T, E]) MapErr(transform func(E) E) Result[T, E] {
+// MapErr transforms an Err value and may change its type.
+func (result Result[T, E]) MapErr[F any](transform func(E) F) Result[T, F] {
 	if result.ok {
-		return result
+		return Ok[T, F](result.value)
 	}
 	return Err[T](transform(result.err))
 }
 
-// AndThen chains an operation without changing the Ok type. Use result.AndThen
-// when the output type differs.
-func (result Result[T, E]) AndThen(transform func(T) Result[T, E]) Result[T, E] {
+// AndThen chains an operation and may change the Ok type.
+func (result Result[T, E]) AndThen[U any](transform func(T) Result[U, E]) Result[U, E] {
 	if !result.ok {
-		return result
+		return Err[U](result.err)
 	}
 	return transform(result.value)
 }
 
-// OrElse recovers without changing either type. Use result.OrElse when the
-// error type differs.
-func (result Result[T, E]) OrElse(fallback func(E) Result[T, E]) Result[T, E] {
+// OrElse recovers from an Err and may change its error type.
+func (result Result[T, E]) OrElse[F any](fallback func(E) Result[T, F]) Result[T, F] {
 	if result.ok {
-		return result
+		return Ok[T, F](result.value)
 	}
 	return fallback(result.err)
 }

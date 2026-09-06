@@ -17,14 +17,13 @@ func FromSlice[T any](values []T) Iterator[T] {
 	return Iterator[T]{values: append([]T(nil), values...)}
 }
 
-// Map transforms every item without changing its type. Use the package-level
-// Map function when the output type differs.
-func (iter Iterator[T]) Map(transform func(T) T) Iterator[T] {
-	values := make([]T, len(iter.values))
+// Map transforms every item and may change its type.
+func (iter Iterator[T]) Map[U any](transform func(T) U) Iterator[U] {
+	values := make([]U, len(iter.values))
 	for index, value := range iter.values {
 		values[index] = transform(value)
 	}
-	return Iterator[T]{values: values}
+	return Iterator[U]{values: values}
 }
 
 // Map transforms every item and may change its type.

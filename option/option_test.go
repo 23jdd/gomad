@@ -33,8 +33,9 @@ func TestOptionBasics(t *testing.T) {
 
 func TestOptionChaining(t *testing.T) {
 	inspected := 0
-	mapped := Map(Some(10), func(value int) string { return strconv.Itoa(value) })
-	got := AndThen(mapped, func(value string) Option[int] { return Some(len(value)) }).
+	got := Some(10).
+		Map(func(value int) string { return strconv.Itoa(value) }).
+		AndThen(func(value string) Option[int] { return Some(len(value)) }).
 		Filter(func(value int) bool { return value > 1 }).
 		Inspect(func(value int) { inspected = value })
 	if got.Unwrap() != 2 || inspected != 2 {
@@ -42,8 +43,10 @@ func TestOptionChaining(t *testing.T) {
 	}
 
 	called := false
-	noneMapped := Map(None[int](), func(value int) string { called = true; return strconv.Itoa(value) })
-	none := AndThen(noneMapped, func(value string) Option[int] { called = true; return Some(len(value)) }).Inspect(func(int) { called = true })
+	none := None[int]().
+		Map(func(value int) string { called = true; return strconv.Itoa(value) }).
+		AndThen(func(value string) Option[int] { called = true; return Some(len(value)) }).
+		Inspect(func(int) { called = true })
 	if none.IsSome() || called {
 		t.Fatal("None chain invoked a callback")
 	}
