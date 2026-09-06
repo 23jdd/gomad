@@ -180,9 +180,9 @@ func (result Result[T, E]) ExpectMust[U any](f func(T) (U, error), message strin
 	}
 	value, err := f(result.value)
 	if err != nil {
-		return Ok[U, error](value)
+		return Err[U, error](err)
 	}
-	return Err[U, error](err)
+	return Ok[U, error](value)
 }
 
 // Must 将一个 Result转化为另一个Result 相当于Map时如果Error直接panic
@@ -192,9 +192,9 @@ func (result Result[T, E]) Must[U any](f func(T) (U, error)) Result[U, error] {
 	}
 	value, err := f(result.value)
 	if err != nil {
-		return Ok[U, error](value)
+		return Err[U, error](err)
 	}
-	return Err[U, error](err)
+	return Ok[U, error](value)
 }
 
 // MarshalJSON 将 Result 编码为 {"ok": value} 或 {"err": err}。
