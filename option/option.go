@@ -32,6 +32,22 @@ func AndThen[T, U any](value Option[T], transform func(T) Option[U]) Option[U] {
 	return transform(value.Unwrap())
 }
 
+// OkOr converts Some to Ok and None to Err, allowing any error value type.
+func OkOr[T, E any](value Option[T], err E) core.Result[T, E] {
+	if value.IsSome() {
+		return core.Ok[T, E](value.Unwrap())
+	}
+	return core.Err[T](err)
+}
+
+// OkOrElse lazily converts Some to Ok and None to Err.
+func OkOrElse[T, E any](value Option[T], fallback func() E) core.Result[T, E] {
+	if value.IsSome() {
+		return core.Ok[T, E](value.Unwrap())
+	}
+	return core.Err[T](fallback())
+}
+
 // FromPtr converts a pointer to an Option. A nil pointer becomes None.
 func FromPtr[T any](value *T) Option[T] {
 	if value == nil {

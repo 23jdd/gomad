@@ -98,6 +98,22 @@ func (opt Option[T]) Inspect(inspect func(T)) Option[T] {
 	return opt
 }
 
+// OkOr converts Some to Ok and None to Err.
+func (opt Option[T]) OkOr(err error) Result[T, error] {
+	if opt.some {
+		return Ok[T, error](opt.value)
+	}
+	return Err[T](err)
+}
+
+// OkOrElse lazily converts Some to Ok and None to Err.
+func (opt Option[T]) OkOrElse(fallback func() error) Result[T, error] {
+	if opt.some {
+		return Ok[T, error](opt.value)
+	}
+	return Err[T](fallback())
+}
+
 // Flatten removes one nesting level when T itself is an Option. Prefer the
 // statically constrained option.Flatten function in generic code.
 func (opt Option[T]) Flatten() T {
