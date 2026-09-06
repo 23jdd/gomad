@@ -1,5 +1,7 @@
 # gomad
 
+[简体中文](README-zh_cn.md)
+
 `gomad` is a lightweight Option and Result library for Go 1.27+, built around
 generic methods and zero-cost value types.
 
