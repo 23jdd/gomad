@@ -149,25 +149,6 @@ func (result Result[T, E]) IntoError() error {
 	return fmt.Errorf("%v", result.err)
 }
 
-// Error lets Result participate in the standard errors package. Ok returns an
-// empty string; use IntoError when a nil-on-success error is needed.
-func (result Result[T, E]) Error() string {
-	if result.ok {
-		return ""
-	}
-	return result.IntoError().Error()
-}
-
-// Is supports errors.Is for Err values whose E implements error.
-func (result Result[T, E]) Is(target error) bool {
-	return !result.ok && errors.Is(result.IntoError(), target)
-}
-
-// As supports errors.As for Err values whose E implements error.
-func (result Result[T, E]) As(target any) bool {
-	return !result.ok && errors.As(result.IntoError(), target)
-}
-
 // Wrap adds context to an Err value and normalizes its error type to error.
 func (result Result[T, E]) Wrap(message string) Result[T, error] {
 	if result.ok {

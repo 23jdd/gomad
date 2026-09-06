@@ -116,12 +116,12 @@ func TestMatchCollectAndPartition(t *testing.T) {
 func TestErrorsIntegration(t *testing.T) {
 	sentinel := errors.New("sentinel")
 	wrapped := result.Err[int](sentinel).Wrap("load config")
-	if !errors.Is(wrapped, sentinel) || wrapped.Error() != "load config: sentinel" {
+	if !errors.Is(wrapped.IntoError(), sentinel) || wrapped.IntoError().Error() != "load config: sentinel" {
 		t.Fatalf("wrapped error = %v", wrapped)
 	}
 	var target *testError
 	typed := result.Err[int](error(&testError{code: 7}))
-	if !errors.As(typed, &target) || target.code != 7 {
+	if !errors.As(result.Error(typed), &target) || target.code != 7 {
 		t.Fatalf("errors.As target = %#v", target)
 	}
 	if result.Ok[int, error](1).IntoError() != nil {

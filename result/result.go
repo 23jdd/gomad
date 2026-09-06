@@ -101,3 +101,9 @@ func Partition[T, E any](values []Result[T, E]) ([]T, []E) {
 func Wrap[T any](value Result[T, error], message string) Result[T, error] {
 	return value.Wrap(message)
 }
+
+// Error converts an Err Result to error and an Ok Result to nil. The returned
+// error can be used with errors.Is and errors.As.
+func Error[T, E any](value Result[T, E]) error {
+	return value.IntoError()
+}
