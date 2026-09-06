@@ -1,6 +1,14 @@
 # gomad
 
-[简体中文](README-zh_cn.md)
+[![Go Reference](https://pkg.go.dev/badge/github.com/23jdd/gomad.svg)](https://pkg.go.dev/github.com/23jdd/gomad)
+[![Go 1.27+](https://img.shields.io/badge/Go-1.27%2B-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Runnable Examples](https://img.shields.io/badge/examples-runnable-2563eb)](option/example_test.go)
+
+> Rust-style Option and Result ergonomics, designed for modern Go.
+
+[Quick start](#30-second-tour) · [Why gomad](#why) · [API reference](#api-reference) ·
+[Examples](examples/main.go) · [简体中文](README-zh_cn.md)
 
 `gomad` is a lightweight Option and Result library for Go 1.27+, built around
 generic methods and zero-cost value types.
@@ -10,12 +18,49 @@ API familiar: values are plain structs, zero values are valid, and adapters are
 provided for `(value, ok)`, `(value, error)`, JSON, `database/sql`, and the
 standard `errors` package.
 
+If you are looking for type-safe null handling, composable Go error handling,
+or Rust-inspired functional primitives without abandoning Go conventions,
+`gomad` is built for that exact middle ground.
+
+## Highlights
+
+| | What you get |
+| --- | --- |
+| **Go 1.27 native** | Type-changing generic method chains such as `Option[int].Map(...) -> Option[string]` |
+| **Go-friendly boundaries** | Adapters for pointers, map lookups, `(T, error)`, `errors.Is/As`, JSON, and SQL |
+| **Predictable values** | Valid zero values, no hidden global state, and no mandatory heap allocation |
+| **Small dependency surface** | Standard library only; no runtime framework or code generation |
+| **Executable documentation** | Every public Option, Result, and Iterator API has a tested example |
+
+## 30-second tour
+
+```go
+name := option.Some(1).
+	AndThen(findUser).
+	Map(func(user User) string { return user.Name }).
+	Filter(func(name string) bool { return name != "" })
+
+config := result.From(os.ReadFile("config.json")).
+	Map(parseConfig).
+	AndThen(validateConfig).
+	Inspect(func(Config) { log.Println("config loaded") }).
+	InspectErr(func(err error) { log.Println("config error:", err) })
+```
+
+Both chains remain statically typed from end to end. None and Err branches skip
+success callbacks automatically, so the happy path stays readable without
+hiding failure handling.
+
 ## Why
 
 Pointers overload “absent” with allocation and mutability, while `(T, error)`
 pairs are easy to accidentally separate. `Option[T]` and `Result[T, E]` keep
 the state and payload together, make every branch explicit, and compose with
 Go 1.27 generic method chains.
+
+gomad is a good fit for parsers, configuration loaders, API clients, database
+boundaries, validation pipelines, and domain models where “missing” and
+“failed” should be impossible to confuse with ordinary values.
 
 ## Install
 
@@ -237,3 +282,18 @@ them locally before drawing performance conclusions.
 | Iterator | `Empty`, `Once`, `FromSlice`, `Map`, `Filter`, `Collect`, `Len` |
 
 See [`examples/main.go`](examples/main.go) for a runnable end-to-end example.
+
+## Support and contribute
+
+If gomad makes your Go code clearer, consider
+[starring the repository](https://github.com/23jdd/gomad). Stars help other Go
+developers discover the project.
+
+- Run the [end-to-end example](examples/main.go) or browse the executable
+  [Option](option/example_test.go), [Result](result/example_test.go), and
+  [Iterator](iterator/example_test.go) examples.
+- [Open an issue](https://github.com/23jdd/gomad/issues) for bugs, API ideas, or
+  real-world integration gaps.
+- Pull requests with focused tests and examples are welcome.
+- Share gomad with teams exploring explicit optional values or composable error
+  handling in Go.
