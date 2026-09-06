@@ -1,5 +1,7 @@
 package option
 
+import "fmt"
+
 type Option[T any] struct {
 	value T
 	some  bool
@@ -49,4 +51,36 @@ func (opt *Option[T]) UnwrapOrElse(f func() T) T {
 		return opt.value
 	}
 	return f()
+}
+
+func (opt *Option[T]) Map[U any](f func(T) U) *Option[U] {
+	if !opt.some {
+		return None[U]()
+	}
+	return Some(f(opt.value))
+}
+
+func (opt *Option[T]) AndThen[U any](f func(T) *Option[U]) *Option[U] {
+	if !opt.some {
+		return None[U]()
+	}
+	return f(opt.value)
+}
+func (opt *Option[T]) OrElse(f func() *Option[T]) *Option[T] {
+	if opt.some {
+		return opt
+	}
+	return f()
+}
+func (opt *Option[T]) Filter(f func(T) bool) *Option[T] {
+	if opt.some && !f(opt.value) {
+		return None[T]()
+	}
+	return opt
+}
+func (opt *Option[T]) Inspect(f func(T)) *Option[T] {
+	if opt.some {
+		f(opt.value)
+	}
+	return opt
 }
