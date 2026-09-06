@@ -181,9 +181,16 @@ func BenchmarkResultMap(b *testing.B) {
 }
 
 func BenchmarkFrom(b *testing.B) {
-	for b.Loop() {
-		_ = result.From(strconv.Atoi("42"))
-	}
+	b.Run("plain", func(b *testing.B) {
+		for b.Loop() {
+			_, _ = strconv.Atoi("42")
+		}
+	})
+	b.Run("result", func(b *testing.B) {
+		for b.Loop() {
+			_ = result.From(strconv.Atoi("42"))
+		}
+	})
 }
 
 type testError struct{ code int }
